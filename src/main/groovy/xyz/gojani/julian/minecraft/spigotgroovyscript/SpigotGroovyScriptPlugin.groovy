@@ -3,22 +3,20 @@ package xyz.gojani.julian.minecraft.spigotgroovyscript
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.bukkit.Bukkit
-import org.bukkit.command.Command
-import org.bukkit.command.CommandSender
-import org.bukkit.event.Event
-import org.bukkit.event.EventPriority
-import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
-import org.reflections.Reflections
-import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.CommandUtils
+import xyz.gojani.julian.minecraft.spigotgroovyscript.commands.SpigotGroovyScriptCommand
+import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.CommandHelperMethods
+import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.ListenerHelperMethods
+import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.PlayerHelperMethods
 
 import java.lang.reflect.Method
 
 class SpigotGroovyScriptPlugin extends JavaPlugin {
 
     static SpigotGroovyScriptPlugin instance
+    private List<Closure> onDisableHandler
 
     void onEnable() {
         instance = this
@@ -29,46 +27,30 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
         if (!new File(getDataFolder(), 'libraries').exists())
             new File(getDataFolder(), 'libraries').mkdir()
 
-        config.addDefault('plugins', [:])
-        config.options().copyDefaults(true)
         saveConfig()
 
-        Bukkit.consoleSender.sendMessage("§aStarted SpigotGroovyPlugin")
+        getCommand("spigotgroovyscript").setExecutor(new SpigotGroovyScriptCommand())
+        getCommand("spigotgs").setExecutor(new SpigotGroovyScriptCommand())
 
+        Bukkit.consoleSender.sendMessage("§aStarted SpigotGroovyPlugin")
 
 
         GroovyScriptEngine engine = new GroovyScriptEngine(getDataFolder().getPath()+'/plugins')
         Binding binding = new Binding()
         binding.plugin = this
+        CommandHelperMethods.initialize(binding)
+        PlayerHelperMethods.initialize(binding)
+        ListenerHelperMethods.initialize(binding)
 
-        Reflections reflections = new Reflections('org.bukkit.event')
-        reflections.getSubTypesOf(Event.class).each {
-            print('on'+it.simpleName.substring(0, it.simpleName.length()-5))
-            binding['on'+it.simpleName.substring(0, it.simpleName.length()-5)] = { Closure handler ->
-                Bukkit.pluginManager.registerEvent(it, new Listener() {}, EventPriority.NORMAL, (Listener listener, Event event) -> {
-                    handler.setProperty('event', event)
-                    handler(event)
-                } , this)
-            }
+        onDisableHandler = []
+        binding.onDisable = { Closure handler ->
+            onDisableHandler.add(handler)
         }
 
-        binding.addCommand = { String name, Closure handler ->
-            CommandUtils.registerCommand(name)
-            getCommand(name).setExecutor((CommandSender sender, Command command, String alias, String[] args)->{
-                handler.setProperty("sender", sender)
-                handler.setProperty("command", command)
-                handler.setProperty("alias", alias)
-                handler.setProperty("args", args)
-                if (handler.getParameterTypes().length > 1)
-                    handler(sender, args)
-                else
-                    handler()
-
-                false
-            })
+        def onInitializedHandler = []
+        binding.onInitialized = { Closure handler ->
+            onInitializedHandler.add(handler)
         }
-
-        binding.onDisable = this.&onDisable
 
         URLClassLoader urlClassLoader = (URLClassLoader) SpigotGroovyScriptPlugin.class.getClassLoader()
 
@@ -96,6 +78,10 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
             Bukkit.consoleSender.sendMessage("§aStarting plugin §c"+pluginConfig.name+" §b"+pluginConfig.name+"/"+pluginConfig.main+".groovy")
             engine.createScript(it.getName()+"/"+pluginConfig.main+".groovy", binding).run()
         }
+
+        onInitializedHandler.each {
+            it()
+        }
     }
 
     static void initImports(ImportCustomizer importCustomizer){
@@ -116,11 +102,14 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
                 "org.bukkit.inventory",
                 "org.bukkit.scheduler",
                 "org.bukkit.scoreboard",
-                "org.bukkit.material")
+                "org.bukkit.material",
+                "org.bukkit.entity")
     }
 
     void onDisable() {
-
+        onDisableHandler.each {
+            it()
+        }
     }
 
 

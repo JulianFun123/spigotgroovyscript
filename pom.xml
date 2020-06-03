@@ -83,6 +83,9 @@
                                 <includes>
 
                                 </includes>
+                                <excludes>
+                                    <exclude>org/bukkit/**</exclude>
+                                </excludes>
                             </artifactSet>
                         </configuration>
                     </execution>

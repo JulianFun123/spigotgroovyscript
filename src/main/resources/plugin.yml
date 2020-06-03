@@ -1,3 +1,9 @@
 name: SpigotGroovyScript
 version: 1.0
 main: xyz.gojani.julian.minecraft.spigotgroovyscript.SpigotGroovyScriptPlugin
+
+commands:
+  spigotgroovyscript:
+    description: Manage SpigotGS
+  spigotgs:
+    description: Manage SpigotGS

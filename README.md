@@ -1,4 +1,4 @@
-# SpigotGroovyScript
+# SpigotGroovyScript (SpigotGS)
 ## A Simplified way to create Spigot-Plugins
 
 ### Getting started
@@ -14,6 +14,7 @@ The `config.json` has to look like this:
 ```
 create a `Test.groovy` and start to code!
 
+You can also type `spigotgroovyscript create test` into the console and a Plugin structure will be created.
 
 ### Example command
 ```groovy
