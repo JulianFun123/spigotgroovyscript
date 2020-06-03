@@ -8,8 +8,10 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 import xyz.gojani.julian.minecraft.spigotgroovyscript.commands.SpigotGroovyScriptCommand
 import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.CommandHelperMethods
+import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.InventoryHelperMethods
 import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.ListenerHelperMethods
 import xyz.gojani.julian.minecraft.spigotgroovyscript.helper.methods.PlayerHelperMethods
+import xyz.gojani.julian.minecraft.spigotgroovyscript.listener.ClickHandlerListener
 
 import java.lang.reflect.Method
 
@@ -29,6 +31,8 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
 
         saveConfig()
 
+        Bukkit.getPluginManager().registerEvents(new ClickHandlerListener(), this)
+
         getCommand("spigotgroovyscript").setExecutor(new SpigotGroovyScriptCommand())
         getCommand("spigotgs").setExecutor(new SpigotGroovyScriptCommand())
 
@@ -41,6 +45,7 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
         CommandHelperMethods.initialize(binding)
         PlayerHelperMethods.initialize(binding)
         ListenerHelperMethods.initialize(binding)
+        InventoryHelperMethods.initialize(binding)
 
         onDisableHandler = []
         binding.onDisable = { Closure handler ->
@@ -111,6 +116,4 @@ class SpigotGroovyScriptPlugin extends JavaPlugin {
             it()
         }
     }
-
-
 }

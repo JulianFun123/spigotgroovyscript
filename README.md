@@ -29,3 +29,25 @@ onPlayerJoin {
     event.player.sendMessage "Hello, "+event.player.name
 }
 ```
+
+### Inventory Example
+```groovy
+def fluffyBed = createItem(Material.BED).setDisplayName("A fluffy bed!").build();
+
+addCommand("testinventory") {
+    if (sender instanceof Player) {
+           Player player = (Player) sender;
+           def inventory = createInventory(9, "Hallo")
+           inventory.setItem(0, fluffyBed)
+           player.openInventory(inventory)
+    }
+}
+
+onInventoryClick {
+    if (event.currentItem.equals(fluffyBed)) {
+        event.whoClicked.sendMessage 'Amazing!'
+    } else {
+        event.whoClicked.sendMessage 'This is not a fluffy bed :('
+    } 
+}
+```
